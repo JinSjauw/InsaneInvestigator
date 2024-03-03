@@ -1,6 +1,4 @@
 using System;
-using Unity.Mathematics;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -13,7 +11,7 @@ public class PlayerController : MonoBehaviour
     [Header("Component References")] 
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Animator animator;
-    [SerializeField] private Transform playerBody;
+    [SerializeField] private Transform playerMesh;
     
     [Header("Gravity Scale")] 
     [SerializeField] private float gravity;
@@ -34,7 +32,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private AnimationCurve maxAccelerationFactor;
 
     [Header("Locomotion - Impulses")] 
-    [SerializeField] private float jumpHeight;
     [SerializeField] private float dodgeLength;
     [SerializeField] private float invincibilityTime;
     
@@ -47,14 +44,12 @@ public class PlayerController : MonoBehaviour
     [Header("Combat - Health")]
     [SerializeField] private float maxHealth;
     private float m_Health;
-
-    [Header("Combat - Projectile")] 
-    [SerializeField] private Transform firingPoint;
-    [SerializeField] private Transform projectilePrefab;
-
+    
     [Header("Interaction")] 
     [SerializeField] private float interactionRadius;
-    private Active closestInteractable;
+    [SerializeField] private Transform cameraFrame;
+    private Active m_ClosestInteractable;
+    private bool m_IsTakingPicture;
     
     //Component Refs
     private Rigidbody m_PlayerBody;
@@ -86,11 +81,6 @@ public class PlayerController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Confined;
         Cursor.visible = true;
         m_Health = maxHealth;
-    }
-
-    private void Start()
-    {
-        
     }
 
     private void FixedUpdate()
@@ -152,11 +142,6 @@ public class PlayerController : MonoBehaviour
         Vector3 goalDir = new Vector3(moveDir.x, 0, moveDir.y);
         goalDir = transform.TransformDirection(goalDir);
         Vector3 unitVelocity = m_GoalVelocity.normalized;
-
-        if (goalDir != Vector3.zero)
-        {
-            playerBody.forward = goalDir;
-        }
         
         float velocityDot = Vector3.Dot(goalDir, unitVelocity);
 
@@ -175,11 +160,6 @@ public class PlayerController : MonoBehaviour
         
         m_PlayerBody.AddForce(Vector3.Scale(neededAcceleration * m_PlayerBody.mass, new Vector3(1, 0, 1)));
     }
-
-    private void RotateToMoveDirection()
-    {
-        playerBody.forward = new Vector3(m_MoveInput.x, 0, m_MoveInput.y);
-    }
     
     private void LookAtMouse()
     {
@@ -187,21 +167,24 @@ public class PlayerController : MonoBehaviour
         m_VerticalRotation = Mathf.Clamp(m_VerticalRotation, -90f, 90f);
         m_HorizontalRotation = m_MouseInput.x * rotationSpeed;
         
-        //transform.LookAt(new Vector3(m_MouseInput.x, transform.position.y, m_MouseInput.y), Vector3.up);
+        playerMesh.LookAt(new Vector3(m_MouseInput.x, playerMesh.position.y, m_MouseInput.y), Vector3.up);
         
         //Log("Mouse Position: " + m_MouseInput);
-        
         //playerCamera.transform.localEulerAngles = Vector3.right * m_VerticalRotation;
     }
 
-    private void Jump()
+    private void SwitchCamera()
     {
-        animator.SetBool("IsGrounded", m_IsGrounded);
-        if (!m_IsGrounded) return;
-        Vector3 playerVelocity = m_PlayerBody.velocity;
-        m_PlayerBody.velocity = new Vector3(playerVelocity.x, 0, playerVelocity.z);
-        m_PlayerBody.AddForce(m_PlayerBody.mass * ( Vector3.up * jumpHeight), ForceMode.Impulse);
-        animator.Play("Jump");
+        m_IsTakingPicture = !m_IsTakingPicture;
+        
+        if (m_IsTakingPicture)
+        {
+            cameraFrame.gameObject.SetActive(true);
+        }
+        else
+        {
+            cameraFrame.gameObject.SetActive(false);
+        }
     }
 
     private void Dodge()
@@ -212,20 +195,31 @@ public class PlayerController : MonoBehaviour
     
     private void Shoot()
     {
-        //Spawn projectile
-        //Launch Projectile
-        //Projectile Can Ricochet
-        Vector3 aimingDirection = firingPoint.forward;
-        aimingDirection.y = 0;
-        Instantiate(projectilePrefab, firingPoint.position, quaternion.identity).GetComponent<Projectile>().Launch(aimingDirection);
+        if (m_IsTakingPicture)
+        {
+            TakePicture();
+        }
+        else
+        {
+            //AOE TAZE
+           
+            //Everything in stops updating and rigidbody is set to non kinematic and uses gravity;
+            Interact();
+        }
+        //Taking picture -> check if there is a suspect & evidence in the camera frame. if yes then +1
+    }
+
+    private void TakePicture()
+    {
+        
     }
 
     private void Interact()
     {
-        if (closestInteractable != null)
+        if (m_ClosestInteractable != null)
         {
-            Debug.Log("Interacted! " + closestInteractable.name);
-            closestInteractable.Interact();
+            Debug.Log("Interacted! " + m_ClosestInteractable.name);
+            m_ClosestInteractable.Interact();
         }
     }
 
@@ -235,29 +229,28 @@ public class PlayerController : MonoBehaviour
         
         if (hits.Length <= 0)
         {
-            closestInteractable = null;
+            m_ClosestInteractable = null;
             return;
         }
         
         if (hits.Length > 1)
         {
             float closestDistance = interactionRadius * 2;
-            closestInteractable = hits[0].GetComponent<Active>();
+            m_ClosestInteractable = hits[0].GetComponent<Active>();
             foreach (Collider hit in hits)
             {
                 float distance = Vector3.Distance(transform.position, hit.transform.position);
                 if (closestDistance > distance)
                 {
                     closestDistance = distance;
-                    closestInteractable = hit.GetComponent<Active>();
+                    m_ClosestInteractable = hit.GetComponent<Active>();
                 }
             }
         }
         else
         {
-            closestInteractable = hits[0].GetComponent<Active>();
+            m_ClosestInteractable = hits[0].GetComponent<Active>();
         }
-        
         //Debug.Log("Hit: " + closestInteractable);
     }
     
@@ -287,7 +280,6 @@ public class PlayerController : MonoBehaviour
     {
         
     }
-
     #endregion
     
     #region Input Callbacks
@@ -331,12 +323,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void OnJump(InputAction.CallbackContext _context)
+    public void OnSwitchCamera(InputAction.CallbackContext _context)
     {
         if (_context.performed)
         {
-            Log("[OnJump]: JUMP!");
-            Jump();
+            Log("[OnSwitchCamera]: Switching Camera State!");
+            SwitchCamera();
         }
     }
 

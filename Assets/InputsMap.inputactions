@@ -15,7 +15,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Jump",
+                    "name": "UseCamera",
                     "type": "Button",
                     "id": "697bc69c-7a02-42f5-a3d7-8e38521da0a3",
                     "expectedControlType": "Button",
@@ -123,7 +123,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Jump",
+                    "action": "UseCamera",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

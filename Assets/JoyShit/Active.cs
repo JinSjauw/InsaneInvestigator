@@ -1,37 +1,39 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Active : MonoBehaviour
 {
-    public GameObject[] colleaguesToActivate;
-    public GameObject[] colleaguesToDeactivate;
 
-    public Color activeColor = Color.green;
-    public Color inactiveColor = Color.red;
+    [SerializeField] private ParticleSystem shockVFX;
+   
+    private Color activeColor = Color.green;
+    private Color inactiveColor = Color.red;
+
+    private Rigidbody agentBody;
     
+    private void Start()
+    {
+        shockVFX.Stop();
+        ActivateColleagues();
+        agentBody = GetComponent<Rigidbody>();
+    }
+
     public void Interact()
     {
-        ActivateColleagues();
         DeactivateColleagues();
     }
 
     void ActivateColleagues()
     {
-        foreach (GameObject colleague in colleaguesToActivate)
-        {
-            SetColleagueColor(colleague, activeColor);
-            //colleague.SetActive(true);
-        }
+       SetColleagueColor(gameObject, activeColor);
     }
 
     void DeactivateColleagues()
     {
-        foreach (GameObject colleague in colleaguesToDeactivate)
-        {
-            SetColleagueColor(colleague, inactiveColor); 
-            //colleague.SetActive(false);
-        }
+        SetColleagueColor(gameObject, inactiveColor);
+        agentBody.isKinematic = false;
+        agentBody.useGravity = true;
+        agentBody.AddTorque(Vector3.forward * 10);
+        shockVFX.Play();
     }
 
     void SetColleagueColor(GameObject colleague, Color color)
