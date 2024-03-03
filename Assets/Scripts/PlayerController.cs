@@ -44,11 +44,12 @@ public class PlayerController : MonoBehaviour
     [Header("Combat - Health")]
     [SerializeField] private float maxHealth;
     private float m_Health;
-    
+
     [Header("Interaction")] 
+    [SerializeField] private GameEventChannel eventChannel;
     [SerializeField] private float interactionRadius;
     [SerializeField] private Transform cameraFrame;
-    private Active m_ClosestInteractable;
+    private Interactable m_ClosestInteractable;
     private bool m_IsTakingPicture;
     
     //Component Refs
@@ -211,7 +212,7 @@ public class PlayerController : MonoBehaviour
 
     private void TakePicture()
     {
-        
+        eventChannel.InvokeEvidenceShot();
     }
 
     private void Interact()
@@ -236,20 +237,20 @@ public class PlayerController : MonoBehaviour
         if (hits.Length > 1)
         {
             float closestDistance = interactionRadius * 2;
-            m_ClosestInteractable = hits[0].GetComponent<Active>();
+            m_ClosestInteractable = hits[0].GetComponent<Interactable>();
             foreach (Collider hit in hits)
             {
                 float distance = Vector3.Distance(transform.position, hit.transform.position);
                 if (closestDistance > distance)
                 {
                     closestDistance = distance;
-                    m_ClosestInteractable = hit.GetComponent<Active>();
+                    m_ClosestInteractable = hit.GetComponent<Interactable>();
                 }
             }
         }
         else
         {
-            m_ClosestInteractable = hits[0].GetComponent<Active>();
+            m_ClosestInteractable = hits[0].GetComponent<Interactable>();
         }
         //Debug.Log("Hit: " + closestInteractable);
     }
