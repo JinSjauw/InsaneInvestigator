@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Pixelize
+  m_Shaders:
+  - first: {fileID: 4800000, guid: ed2f0baba8e966544a9ac6134e9cdd03, type: 3}
+    second:
+      variants: []

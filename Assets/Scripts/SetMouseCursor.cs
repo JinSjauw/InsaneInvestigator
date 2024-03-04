@@ -8,7 +8,7 @@ public class SetMouseCursor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Cursor.SetCursor(cursorSprite, cursorHotSpot, CursorMode.Auto);
+        //Cursor.SetCursor(cursorSprite, cursorHotSpot, CursorMode.Auto);
     }
 
     // Update is called once per frame
