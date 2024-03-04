@@ -11,9 +11,8 @@ public class AgentManager : MonoBehaviour
 
     [SerializeField] private float spawnRadius;
     [SerializeField] private int maxActiveAgents;
-    [SerializeField] private float spawnCheckInterval;
+    //[SerializeField] private float spawnCheckInterval;
     [SerializeField] private float spawnDelay;
-    private float spawnTimer = 0;
     
     private List<AgentController> m_ActiveAgentList;
     
@@ -32,12 +31,12 @@ public class AgentManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        spawnTimer += Time.deltaTime;
+        /*spawnTimer += Time.deltaTime;
         if (spawnTimer > spawnCheckInterval)
         {
             StartCoroutine(Spawn());
             spawnTimer = 0;
-        }
+        }*/
     }
     #endregion
 
@@ -46,7 +45,7 @@ public class AgentManager : MonoBehaviour
     {
         if (m_ActiveAgentList.Count > maxActiveAgents) yield return null;
 
-        int spawnAmount = maxActiveAgents - m_ActiveAgentList.Count;
+        float spawnAmount = maxActiveAgents - (m_ActiveAgentList.Count);
 
         for (int i = 0; i < spawnAmount; i++)
         {
@@ -57,11 +56,12 @@ public class AgentManager : MonoBehaviour
             
             AgentController spawnedAgent = Instantiate(agentPrefab, randomSpawnPoint, Quaternion.identity).GetComponent<AgentController>();
             spawnedAgent.transform.SetParent(transform);
-            spawnedAgent.SetPatrolPoints(waypointsList);
+            spawnedAgent.InitializeAgent(waypointsList);
             spawnedAgent.OnAgentDeath += OnAgentDeath;
             
             m_ActiveAgentList.Add(spawnedAgent);
-
+            Debug.Log(maxActiveAgents + " " + m_ActiveAgentList.Count + " " + spawnAmount);
+            
             yield return new WaitForSeconds(spawnDelay);
         }
     }

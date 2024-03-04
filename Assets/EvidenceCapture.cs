@@ -22,6 +22,7 @@ public class EvidenceCapture : MonoBehaviour
         if (hits.Length > 1)
         {
             Debug.Log("Score +1");
+            eventChannel.InvokeEvidenceCaptureEvent();
         }
     }
 }
